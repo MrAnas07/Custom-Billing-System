@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Routes, Route, Link, useLocation, useNavigate } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
 import axios from 'axios';
+import html2pdf from 'html2pdf.js';
 import './App.css';
 import ViewCustomerKhata from './ViewCustomerKhata';
 
@@ -343,7 +344,30 @@ function MainApp() {
     window.open(`https://wa.me/${mobile}?text=${encodeURIComponent(text)}`, '_blank');
   };
 
-  const printInvoice = () => window.print();
+  const printInvoice = () => {
+    const element = document.getElementById('print-area');
+    if (!element) return;
+
+    const actionBtns = element.querySelectorAll('.no-print');
+    actionBtns.forEach(btn => btn.style.display = 'none');
+
+    const inv = viewInvoice || generatedInvoice;
+    const fileName = inv ? `${inv.invoice_number}_${inv.client_name}.pdf` : 'invoice.pdf';
+
+    const options = {
+      margin: [10, 10, 10, 10],
+      filename: fileName,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true, letterRendering: true },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+
+    html2pdf().from(element).set(options).save().then(() => {
+      actionBtns.forEach(btn => btn.style.display = 'flex');
+    }).catch(() => {
+      actionBtns.forEach(btn => btn.style.display = 'flex');
+    });
+  };
 
   const handleLoginSubmit = (e) => {
     e.preventDefault();
@@ -987,7 +1011,7 @@ function InvoiceView({ viewInvoice, setViewInvoice, printInvoice, shareOnWhatsAp
     <div className="section">
       <div className="no-print actions-btn" style={{ marginBottom: '20px' }}>
         <button className="btn-ghost" onClick={() => setViewInvoice(null)}>Back</button>
-        <button className="btn-print" onClick={printInvoice}>Print / PDF</button>
+        <button className="btn-print" onClick={printInvoice}>Download PDF</button>
         <button className="btn-whatsapp" onClick={() => shareOnWhatsApp(viewInvoice)}>WhatsApp</button>
         {(viewInvoice.payment_status || 'Unpaid') !== 'Paid' && <button className="btn-add-cash" onClick={() => setPayModal(viewInvoice)}>+ Add Payment</button>}
       </div>
@@ -1077,7 +1101,7 @@ function InvoiceView({ viewInvoice, setViewInvoice, printInvoice, shareOnWhatsAp
         </div>
 
         <div className="no-print actions-btn">
-          <button className="btn-print" onClick={printInvoice}>Print / Save PDF</button>
+          <button className="btn-print" onClick={printInvoice}>Download PDF</button>
           <button className="btn-whatsapp" onClick={() => shareOnWhatsApp(viewInvoice)}>WhatsApp</button>
         </div>
       </div>

@@ -1,6 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const serverless = require('serverless-http');
 
 const app = express();
 
@@ -12,10 +13,7 @@ let isConnected = false;
 async function connectDB() {
   if (isConnected) return;
   const MONGO_URI = process.env.MONGO_URI;
-  if (!MONGO_URI) {
-    console.log('MONGO_URI not set!');
-    return;
-  }
+  if (!MONGO_URI) return;
   try {
     await mongoose.connect(MONGO_URI);
     isConnected = true;
@@ -30,6 +28,10 @@ app.use(async (req, res, next) => {
   next();
 });
 
+app.get('/api', (req, res) => {
+  res.json({ status: 'AR Box API is running' });
+});
+
 const productRoutes = require('./routes/products');
 const invoiceRoutes = require('./routes/invoices');
 const clientRoutes = require('./routes/clients');
@@ -38,8 +40,5 @@ app.use('/api/products', productRoutes);
 app.use('/api/invoices', invoiceRoutes);
 app.use('/api/clients', clientRoutes);
 
-app.get('/api', (req, res) => {
-  res.json({ status: 'AR Box API is running' });
-});
-
 module.exports = app;
+module.exports.handler = serverless(app);

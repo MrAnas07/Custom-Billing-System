@@ -69,6 +69,11 @@ function MainApp() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [darkMode, setDarkMode] = useState(() => localStorage.getItem('arbox-dark') === 'true');
 
+  const [isLoggedIn, setIsLoggedIn] = useState(() => localStorage.getItem('arbox-admin') === 'true');
+  const [usernameInput, setUsernameInput] = useState('');
+  const [passwordInput, setPasswordInput] = useState('');
+  const [loginError, setLoginError] = useState('');
+
   useEffect(() => {
     document.body.classList.toggle('dark-mode', darkMode);
     localStorage.setItem('arbox-dark', darkMode);
@@ -340,6 +345,48 @@ function MainApp() {
 
   const printInvoice = () => window.print();
 
+  const handleLoginSubmit = (e) => {
+    e.preventDefault();
+    if (usernameInput === 'admin' && passwordInput === 'arbox2026') {
+      localStorage.setItem('arbox-admin', 'true');
+      setIsLoggedIn(true);
+      setLoginError('');
+    } else {
+      setLoginError('Invalid username or password!');
+    }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('arbox-admin');
+    setIsLoggedIn(false);
+    setUsernameInput('');
+    setPasswordInput('');
+  };
+
+  if (!isLoggedIn) {
+    return (
+      <div className="login-screen-wrapper">
+        <div className="login-card-box">
+          <img src="/logo.png" alt="AR Box" className="login-logo-img" />
+          <h2>AR Box Admin Portal</h2>
+          <p>Enter your credentials to access the system</p>
+          <form onSubmit={handleLoginSubmit} className="login-inner-form">
+            <div className="login-input-group">
+              <label>Username</label>
+              <input type="text" placeholder="Enter username" value={usernameInput} onChange={e => setUsernameInput(e.target.value)} required />
+            </div>
+            <div className="login-input-group">
+              <label>Password</label>
+              <input type="password" placeholder="Enter password" value={passwordInput} onChange={e => setPasswordInput(e.target.value)} required />
+            </div>
+            {loginError && <p className="login-error-txt">{loginError}</p>}
+            <button type="submit" className="btn-login-submit">Login</button>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
   const grandTotal = invoiceItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
   return (
@@ -415,6 +462,7 @@ function MainApp() {
             <button className="hamburger-btn" onClick={() => setMenuOpen(!menuOpen)}>
               {menuOpen ? '✕' : '☰'}
             </button>
+            <button className="btn-logout" onClick={handleLogout} title="Logout">Logout</button>
           </div>
         </div>
       </header>
